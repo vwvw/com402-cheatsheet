@@ -3,6 +3,7 @@
 \usepackage{multicol}
 \usepackage{calc}
 \usepackage{ifthen}
+\usepackage{graphicx}
 \usepackage[landscape]{geometry}
 \usepackage{hyperref}
 
@@ -95,11 +96,17 @@
 \setlength{\columnsep}{2pt}
 
 \section{1-2}
-\textbf{Comodity threats} targets every1\\
+\textbf{Confidentiality} Only access to those wanted via i.e., access control\\
+\textbf{Integrity} keep info correct, i.e., hash/MAC\\
+\textbf{Availability} info available, i.e., make copies/distribute\\
+\textbf{Authenticity/Integrity of origin} prevent fake info, i.e., keyed hash == MAC/ sign\\
+\textbf{Non repudiation} prevent denial of statement, add signature\\
+\textbf{Security lifecycle} Risk assessment$\rightarrow$ establish policy$\rightarrow$ implement$\rightarrow$operate maintain\\
+\textbf{Commodity threats} targets everyone\\
 \textbf{Rootkit} hide malware\\
 \textbf{LDAP inject} (\&(name=admin)(\&))(pwd=...))\\
-\textbf{inject protection} inspect data twice (input validate, encode when use)\\
-\textbf{broken access control} ex. direct object ref\\
+\textbf{Inject protection} inspect data twice (input validate, encode when use)\\
+\textbf{Broken access control} ex. direct object ref\\
 
 \section{3 - Crypto}
 \textbf{Confidentiality - Integrity - Authentification - Non repudiation}\\
@@ -112,11 +119,14 @@
 \textbf{Dig. Sign.} encrypt hash msg\\
 \textbf{ECC} smaller keys\\
 \textbf{TLS} Server has cert. Sign client info (RSA) $\rightarrow$ sym. key (DH) and HMAC (SHA)\\
+\includegraphics[width=\columnwidth]{tls.png}
+\textbf{SNI} server name unencrypted\\
 \textbf{HSTS} Remember HTTPS. Option to preload.\\
 \textbf{Cert Pinning} Client knowns which CA can sign.\\
 
-\section{4}
+\section{4 DB security} 
 \textbf{DB access \& encrypt} Hardware - OS - Database - Network - Application\\
+\includegraphics[width=\columnwidth]{tls2.png}
 \textbf{DAC} discret. acc. control.  grant privilege on views/tables.\\
 \textbf{Role based AC} grant role to users
 \textbf{Rainbow} t memory look up, $\frac{1}{2}t^2$ hash op. m~x~t table\\
@@ -151,8 +161,21 @@
 \textbf{Bio auth} acquire, compare, decide
 \textbf{Disadv.} acquisition never exact$\rightarrow$ no hash, no change\\
 \textbf{Challenge response} challenge with pass. hash, MITM risk if not HMAC, mutual i.e., WPA2\\
-\textbf{Kerberos}
-
+\textbf{Kerberos} based on sym. keys and tickets system, 3 step approach, MITM not possible due to session key, replay attack not possible due to freshness and server keeping list of past ones\\
+\textbf{Kerb. ticker} ticker usually valid 8h, $c$ client identity, $a$ IP address, $v$ validity period, $K_{c,s}$ session key between client and server, $T_{c,s}=\texttt{ENC}_{K_s}(c,a,v,K_{c,s})$\\
+\textbf{Authenticator} $ENC_{K_{c,s}}(c,t)$\\
+\textbf{Authentification} Password hash as $K_c$, 1. client sent c, tgs for ticket to ticket granting system, authentification server responds with ticket granting ticker: $T_{c,tgs}$ and session key: $ENC_{K_c}(K_{c,tgs})$\\
+\textbf{Authorization} client create authenticator with $K_{c,tgs}$, send $T_{c,tgs}$ and $A_{c,tgs}$ to the TGS, TGS checks A and send back $T_{c,s}$ and an encrypted session key $ENC\_{K_{c,tgs}}(K_{c,s})$, client knows $K_{c,tgs}$ and can decrypt session key\\
+\textbf{Access} client create $K_{c,s}$, sends $T_{c,s}$ and $A_{c,s}$, server verifies and then allows service\\
+\textbf{Ticket validation} decrypt, validate IP and period, use session key to: decrypt authentificator, verify it contains same id c as ticket, then verify authenticator is fresh + that authenticator not used in last 5min\\
+\textbf{Kerb. attack} Request ticket for user c, bruteforce session key $K_{c,tgs}$ with pass. hashes, countered by pre-auth: user send authenticator to TGT, bruteforcing possible but you can observe when user login\\
+\textbf{Preauth} client create authentificator $K_c(pwd hash, sals, iteration)$, client ask for ticket at TGS, sends c, tgs, and $A_c$, AS response with $T_{c,tgs}$ and $ENC_{K_c}(K_{c,tgs})$\\
+\textbf{Microsoft} $K_c$ not password hash, many iterations\\
+\textbf{kerb sec.} relies on sym. keys: pass. hash, sym. keys to encrypt ticket\\
+\subsection{Delegated auth}
+\textbf{Oauth2} roles: client, resource server, authorization server, user --- client and auth have shared secret, client exchange authentification code for access token --- most apps store no pass. but store oauth token\\
+\includegraphics[width=\columnwidth]{kerb.png}\\
+\includegraphics[width=\columnwidth]{oauth2.png}\\
 
 \section{6 Netsec}
 \textbf{Network segmenation} via ACL, rings vs zone\\
@@ -210,9 +233,10 @@
 \textbf{Input perturbation} Data modified before response\\
 \textbf{Randomized response} randomness avg. out so still useful\\
 \textbf{Differential priv.} Quantify leakage, small change in DB do no change distri., minimize increased risk when joining DB\\
-$P[A(D)\in S] \leq e^\epsilon x P[A(D_{-r})\in S]$\\
-higher sensitivity/$\epsilon$ (privacy guarantee $\rightarrow$ higher distortion (Laplace),
-lower $\epsilon\rightarrow$ privacy
+$P[A(D)\in S] \leq e^\epsilon \cdot P[A(D_{-r})\in S]$\\
+higher sensitivity ye higher distortion, (privacy guarantee $\rightarrow$ higher distortion (Laplace),
+lower $\epsilon\rightarrow$ more privacy\\
+\textbf{epsilon} add for multiple output, depends on sensitivity, 
 \textbf{DP tools} add noise to DB, to algo, output\\
 \textbf{ZK proof} zk-STARK for DNA, prop: completeness soundness zk,
 
@@ -222,17 +246,19 @@ lower $\epsilon\rightarrow$ privacy
 \textbf{Membership inference} Was x in the dataset? works because of overfitting,\\
 \textbf{MI 3 poss. assumptions} No samples of training data, no knowledge of the distri. of training data, no knowledge of the model param.\\
 \textbf{Attribute inference} Given answer, infer if a training sample had an attribute\\
-\textbf{Adverserial ex.} Input to make ML fail, transferal between model\\
+\textbf{Privacy problems} ML needs data to learn, obtain value via giving sample (predict on noise$\rightarrow$reduced utility), the output reveal info (MI, attribute inference), ML good at inference\\ 
+\textbf{Adverserial ex.} Input to make ML fail, transferable between model\\
 \textbf{Adverserial training} train against adv. ex.\\
 \textbf{Certified defense} No adv. example exist up to certain perturbation\\
 \textbf{Detect suspicious queries} look for deviation in successive queries\\
-\textbf{Base rate} True positive * Reality / predictivness, hard to get good results on weak signals\\
+\textbf{Base rate} True positive * Reality / predictivness, hard to get good results on weak signals $P[attack|alarm]=\frac{P[alarm|attack]P[attack]}{P[alarm]}$\\
 \textbf{Stat. bias} diff. between estimator exp. value and true value\\
 \textbf{Group fairness} outcome should not differ between demographic groups\\
 \textbf{Individual fairness} Should not differ between individuals\\
 \textbf{Federated learning} Learn across datasets, build weights, each client compute updated weights, update model with weighted avg. of clients
 \textbf{Lim.} need revel of model$\rightarrow$homomorphic enc./multiparty comm./Diff. priv.\\
 \textbf{Privacy perseving distributed ML} Use multiparty homomorphic enc. which perform comp. without seeing the data\\
+\textbf{}Combining decentralized data sets to train a ML model while protecting privacy is doable: adding noise to partial aggregates, sending partial aggregates to a trusted execution environment, By a combination of homomorphic encryption and secure multiparty computation\\
 
 \section{12 Blockchain}
 \textbf{Proof of personhood} Each human one vote / socialism\\
@@ -246,13 +272,19 @@ lower $\epsilon\rightarrow$ privacy
 
 
 \section{13 DNA}
+\textbf{De-identification} Remove names\\
+\textbf{Homer's attack} Learn if target is in the case group by correlating SNP\\
+\textbf{GA4GH Beacon} check multiple DB for a specific question, attack possible by multiple query on lowest frequency allele\\
+\textbf{Surname inference attack} Get lastname by looking at y chromosome, combine with age + sex for identification\\
 \textbf{Multi site studies Health} multi party Homo. enc. (MHE) with honest but curious adversary and malicious but covert adversary.
-\textbf{Distributed gradient descent} to create global model
+\textbf{Distributed gradient descent} to create global model\\
+\textbf{Single Nucleotide Polymorphism} At least one nucleotide different in $\geq$ 1\% pop, == alleles\\
+
 
 \section{14 Evoting}
 \textbf{Absence of provisional result} wait till end\\
 \textbf{Individual verifiability} can check vote counted\\
-\textbf{Universal verifiability} all votes corectly counted\\
+\textbf{Universal verifiability} all votes correctly counted\\
 \textbf{Control components} Gen. keys on 4 different setup, 1 trusted at least\\
 \textbf{NKZIP} used to prove blinded vote same vote as encrypted and then mixed, correctly decrypted, know content of vote\\
 \textbf{Elgamal} Provide multiplicative homomorphism, reencrypt with 1 to get anonymity, Prime order subgroup, $p=2q+1, g^{x mod q}mod p$, $\texttt{Enc}_{pk}(m,r)=(m\cdot pk^r, g^r), \texttt{ Dec}_{sk}(a,b)=a/b^{sk}=m$\\
@@ -262,6 +294,7 @@ lower $\epsilon\rightarrow$ privacy
 \textbf{vote} enc. vote v with elgamal $(v*pk^r, g^r)$, NIKZP they know random r, add some text to NIKZP, so text is signed\\
 \textbf{Mixnets} change representations without changing content + shuffling, each CC mix, elgamal multiply enc(1) +NIZKP to prove didnt change content of vote\\
 \textbf{Bugs} commitment, NIZKP where b can make gibberish while valid proof
+$\Delta $
 \end{multicols*}
 \end{document}
 
